@@ -107,6 +107,38 @@ def test_quantita_senza_decimali_inutili():
     assert parse(fattura_minima(linee=linea))[0].linee[0].quantita == "30"
 
 
+@pytest.mark.parametrize(
+    ("grezzo", "atteso"),
+    [
+        # gli zeri di riempimento del tracciato non si stampano...
+        ("6.08000000", "6,08"),
+        ("100.00", "100,00"),
+        ("5", "5,00"),
+        # ...ma i decimali veri sì, fino agli otto ammessi dal tracciato.
+        ("0.41670000", "0,4167"),
+        ("1.23456789", "1,23456789"),
+        ("1234.5678", "1.234,5678"),
+        ("-0.1250", "-0,125"),
+    ],
+)
+def test_prezzo_unitario_conserva_i_decimali(grezzo, atteso):
+    """Il prezzo unitario non va arrotondato: 0,4167 non è 0,42."""
+    linea = f"""
+        <DettaglioLinee><NumeroLinea>1</NumeroLinea><Descrizione>X</Descrizione>
+          <PrezzoUnitario>{grezzo}</PrezzoUnitario><PrezzoTotale>1.00</PrezzoTotale>
+        </DettaglioLinee>"""
+    assert parse(fattura_minima(linee=linea))[0].linee[0].prezzo_unitario == atteso
+
+
+def test_prezzo_totale_resta_a_due_decimali():
+    """Solo il prezzo unitario ha decimali lunghi: gli importi restano a due."""
+    linea = """
+        <DettaglioLinee><NumeroLinea>1</NumeroLinea><Descrizione>X</Descrizione>
+          <PrezzoUnitario>0.4167</PrezzoUnitario><PrezzoTotale>4.16700</PrezzoTotale>
+        </DettaglioLinee>"""
+    assert parse(fattura_minima(linee=linea))[0].linee[0].prezzo_totale == "4,17"
+
+
 def test_valore_non_numerico_resta_com_e():
     """Un importo illeggibile non fa saltare la lettura: si mostra tale e quale."""
     linea = """
