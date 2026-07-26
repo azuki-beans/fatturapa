@@ -3,7 +3,18 @@
 Le modifiche degne di nota. Il progetto segue il [versionamento
 semantico](https://semver.org/lang/it/).
 
-## [0.1.0] — non ancora pubblicata
+## [0.2.0] — 2026-07-26
+
+### Corretto
+
+- `Linea.prezzo_unitario` non viene più arrotondato a due decimali. Il tracciato
+  ne ammette fino a otto e i listini a decimale lungo li usano davvero: un
+  prezzo di `0.41670000` veniva restituito come `0,42`, perdendo il valore
+  originale. Ora gli zeri di riempimento si tolgono ma i decimali significativi
+  si conservano (`0,4167`), sempre con un minimo di due (`5` → `5,00`).
+  Gli importi (`prezzo_totale`, imponibili, imposte) restano a due decimali.
+
+## [0.1.0] — 2026-07-26
 
 Prima versione. Il parser nasce dentro
 [p7m-apri](https://github.com/azuki-beans/p7m-apri), dove serviva a impaginare

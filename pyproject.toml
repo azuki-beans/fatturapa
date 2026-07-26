@@ -1,6 +1,6 @@
 [project]
 name = "fatturapa"
-version = "0.1.0"
+version = "0.2.0"
 description = "Parser della Fattura Elettronica italiana (FatturaPA v1.2) in sola standard library."
 authors = [{ name = "Marco Pavanelli" }]
 license = "MIT"

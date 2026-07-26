@@ -321,6 +321,20 @@ def _num(raw: str, decimali: int = 2) -> str:
     return f"-{testo}" if negativo else testo
 
 
+def _prezzo(raw: str) -> str:
+    """Prezzo unitario: il tracciato ammette fino a otto decimali, e vanno tenuti.
+
+    Arrotondare sempre a due cifre falserebbe i listini a decimale lungo, dove
+    0,4167 diventerebbe 0,42. Gli zeri di riempimento si tolgono, ma mai sotto i
+    due decimali con cui un prezzo si legge normalmente.
+    """
+    grezzo = (raw or "").strip()
+    if not grezzo:
+        return ""
+    _, _, decimali = grezzo.partition(".")
+    return _num(grezzo, max(2, len(decimali.rstrip("0"))))
+
+
 def _qta(raw: str) -> str:
     """Quantità: toglie gli zeri decimali superflui (30.00000000 -> 30)."""
     raw = (raw or "").strip()
@@ -410,7 +424,7 @@ def _linea(el) -> Linea:
         descrizione=_text(el, "Descrizione"),
         quantita=_qta(_text(el, "Quantita")),
         unita_misura=_text(el, "UnitaMisura"),
-        prezzo_unitario=_num(_text(el, "PrezzoUnitario")),
+        prezzo_unitario=_prezzo(_text(el, "PrezzoUnitario")),
         prezzo_totale=_num(_text(el, "PrezzoTotale")),
         aliquota_iva=_num(_text(el, "AliquotaIVA")),
         natura=NATURA.get(_text(el, "Natura"), _text(el, "Natura")),
