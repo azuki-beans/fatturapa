@@ -23,7 +23,8 @@ keywords = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    # niente classifier di licenza: la licenza è dichiarata sopra come
+    # espressione SPDX (`license = "MIT"`), i classifier sono deprecati.
     "Natural Language :: Italian",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -57,6 +58,11 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+# `supporto` è il modulo di appoggio dei test, non un pacchetto di terze parti:
+# senza questa riga finisce nel blocco sbagliato e l'ordinamento non torna mai.
+known-first-party = ["fatturapa", "supporto"]
 
 [build-system]
 requires = ["poetry-core>=2.0"]

@@ -6,7 +6,6 @@ fatture in lotto e i campi opzionali disposti come li scrive davvero il SdI.
 import pytest
 
 from fatturapa import Documento, parse
-
 from supporto import leggi
 
 UFFICIALI = [

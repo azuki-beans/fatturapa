@@ -152,9 +152,9 @@ class Soggetto:
 
     @property
     def partita_iva(self) -> str:
-        if self.id_codice:
-            return f"{self.id_paese}{self.id_codice}" if self.id_paese else self.id_codice
-        return ""
+        if not self.id_codice:
+            return ""
+        return f"{self.id_paese}{self.id_codice}" if self.id_paese else self.id_codice
 
     @property
     def indirizzo_completo(self) -> str:
@@ -532,7 +532,7 @@ def parse(raw: bytes) -> list[Documento]:
             cedente=cedente,
             cessionario=cessionario,
             codice_destinatario=codice_dest,
-            linee=[_linea(l) for l in _findall(beni, "DettaglioLinee")],
+            linee=[_linea(el) for el in _findall(beni, "DettaglioLinee")],
             trasporto=_trasporto(_find(body, "DatiGenerali", "DatiTrasporto")),
             ordini=[
                 _ordine(o)

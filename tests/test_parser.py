@@ -188,7 +188,8 @@ def test_partita_iva_senza_paese():
           <IdFiscaleIVA><IdCodice>01234567890</IdCodice></IdFiscaleIVA>
           <Anagrafica><Denominazione>ALPHA</Denominazione></Anagrafica>
         </DatiAnagrafici>"""
-    assert parse(fattura_minima(cedente=cedente))[0].cedente.partita_iva == "01234567890"
+    letto = parse(fattura_minima(cedente=cedente))[0].cedente
+    assert letto.partita_iva == "01234567890"
 
 
 def test_persona_fisica_nome_e_cognome():

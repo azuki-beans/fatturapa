@@ -24,6 +24,9 @@ jobs:
       - name: Installa Poetry
         run: pipx install poetry
 
+      - name: Verifica che poetry.lock sia allineato al pyproject
+        run: poetry check --lock
+
       - name: Installa le dipendenze
         run: poetry install --with dev
 
