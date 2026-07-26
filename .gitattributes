@@ -1,0 +1,4 @@
+# I tracciati di esempio dell'Agenzia delle Entrate vanno conservati byte per
+# byte come sono stati pubblicati (hanno fine riga CRLF): sono fixture, non
+# codice, e devono restare identiche all'originale su qualunque piattaforma.
+tests/tracciati/*.xml -text

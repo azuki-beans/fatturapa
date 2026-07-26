@@ -1,0 +1,62 @@
+# Pubblicazione su PyPI al tag di versione (es. v0.1.0).
+#
+# Usa il *trusted publishing* di PyPI (OIDC): nessun token API da custodire nei
+# secret. Prima del primo rilascio va configurato una volta sola su PyPI, in
+# "Publishing" del progetto (o come pending publisher se il progetto non esiste
+# ancora), indicando: proprietario e nome del repository, il file di workflow
+# `publish.yml` e il nome dell'ambiente qui sotto (`pypi`).
+name: publish
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Installa Poetry
+        run: pipx install poetry
+
+      - name: Verifica che il tag corrisponda alla versione del pacchetto
+        run: |
+          versione="$(poetry version --short)"
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$versione" != "$tag" ]; then
+            echo "Il tag $GITHUB_REF_NAME non corrisponde alla versione $versione del pyproject." >&2
+            exit 1
+          fi
+
+      - name: Test prima di pubblicare
+        run: |
+          poetry install --with dev
+          poetry run pytest -q
+
+      - name: Costruisci i pacchetti
+        run: poetry build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write   # necessario al trusted publishing
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

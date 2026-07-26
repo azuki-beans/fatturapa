@@ -1,0 +1,34 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # La libreria dichiara requires-python >= 3.11: vanno provate tutte.
+        python: ["3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Installa Poetry
+        run: pipx install poetry
+
+      - name: Installa le dipendenze
+        run: poetry install --with dev
+
+      - name: Test
+        run: poetry run pytest -q
+
+      - name: Lint
+        run: poetry run ruff check .

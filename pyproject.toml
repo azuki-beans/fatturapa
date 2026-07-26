@@ -1,0 +1,63 @@
+[project]
+name = "fatturapa"
+version = "0.1.0"
+description = "Parser della Fattura Elettronica italiana (FatturaPA v1.2) in sola standard library."
+authors = [{ name = "Marco Pavanelli" }]
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+# Nessuna dipendenza: solo standard library. Il vincolo di versione è basso
+# apposta, così la libreria è usabile anche da progetti fermi a Python 3.11.
+requires-python = ">=3.11"
+dependencies = []
+keywords = [
+    "fatturapa",
+    "fattura-elettronica",
+    "sdi",
+    "sistema-di-interscambio",
+    "agenzia-delle-entrate",
+    "xml",
+    "invoice",
+    "italy",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: Italian",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business :: Financial :: Accounting",
+    "Topic :: Text Processing :: Markup :: XML",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/azuki-beans/fatturapa"
+Repository = "https://github.com/azuki-beans/fatturapa"
+Issues = "https://github.com/azuki-beans/fatturapa/issues"
+Changelog = "https://github.com/azuki-beans/fatturapa/blob/main/CHANGELOG.md"
+
+[tool.poetry]
+packages = [{ include = "fatturapa" }]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+ruff = "^0.9"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
