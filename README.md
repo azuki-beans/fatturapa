@@ -2,17 +2,14 @@
 
 [![PyPI](https://img.shields.io/pypi/v/fatturapa?color=8A2230)](https://pypi.org/project/fatturapa/)
 [![Python](https://img.shields.io/pypi/pyversions/fatturapa)](https://pypi.org/project/fatturapa/)
-[![Licenza MIT](https://img.shields.io/badge/licenza-MIT-informational)](LICENSE)
+[![MIT License](https://img.shields.io/badge/license-MIT-informational)](LICENSE)
 
-Parser della **Fattura Elettronica** italiana — tracciato FatturaPA v1.2, formati
-`FPR12` e `FPA12`. **Zero dipendenze**: solo standard library.
+Parser for the Italian **electronic invoice** (*Fattura Elettronica*): FatturaPA v1.2 schema,
+`FPR12` and `FPA12` formats. **Zero dependencies**: standard library only.
 
-> *Parser for the Italian electronic invoice format (FatturaPA v1.2). Turns the
-> XML into plain dataclasses. No dependencies.*
-
-Trasforma l'XML in dataclass già leggibili — codici decodificati, importi e date
-all'italiana — pronte da impaginare come preferisci. La libreria **non** genera
-PDF e non impone un motore di template: la resa grafica resta tua.
+It turns the XML into ready-to-read dataclasses (decoded codes, amounts and dates in Italian
+format) that you can lay out however you like. The library does **not** generate PDFs and does not
+impose a template engine: rendering is up to you.
 
 ```bash
 pip install fatturapa
@@ -36,33 +33,36 @@ DITTA BETA
 Totale: 6,10 EUR
 ```
 
-## Cosa fa (e cosa no)
+The public API mirrors the Italian names of the FatturaPA schema (`documento`, `cessionario`,
+`linee`, …), so fields map one-to-one to the official specification.
 
-Legge il tracciato e te lo restituisce in una forma comoda da stampare:
+## What it does (and what it doesn't)
 
-- **decodifica i codici** — `TD01` → *Fattura*, `RF19` → *Forfettario*, `MP05` →
-  *Bonifico*, e così per Natura, CondizioniPagamento, EsigibilitaIVA;
-- **formatta all'italiana** — `1234.56` → `1.234,56`, `2026-01-20` → `20/01/2026`;
-- **calcola i totali** dai riepiloghi, e ricava il totale documento (imponibile +
-  imposta + bollo) quando `ImportoTotaleDocumento` manca, visto che è opzionale.
+It reads the XML and gives it back in a shape that is easy to print:
 
-Non valida contro l'XSD, non verifica firme digitali, non estrae allegati. Se ti
-serve quello, guarda
+- **decodes codes**: `TD01` → *Fattura*, `RF19` → *Forfettario*, `MP05` → *Bonifico*, and the same
+  for Natura, CondizioniPagamento, EsigibilitaIVA;
+- **formats the Italian way**: `1234.56` → `1.234,56`, `2026-01-20` → `20/01/2026`;
+- **computes totals** from the VAT summaries, and derives the document total (taxable amount + tax +
+  stamp duty) when `ImportoTotaleDocumento` is missing, since it is optional.
+
+It does not validate against the XSD, does not verify digital signatures and does not extract
+attachments. If you need that, have a look at
 [fattura-elettronica-reader](https://pypi.org/project/fattura-elettronica-reader/).
 
-## Scelte di fondo
+## Design choices
 
-- **Namespace-agnostico.** L'XML del SdI mescola il namespace del tracciato,
-  figli con `xmlns=""` e una firma XAdES innestata; la navigazione avviene per
-  *nome locale* del tag, quindi funziona con o senza prefisso.
-- **Nessuna eccezione sui campi opzionali.** I tag mancanti diventano stringhe o
-  liste vuote: **mai `None`**. Il codice che stampa non deve difendersi.
-- **Le fatture in lotto sono la norma.** Una `FatturaElettronica` può contenere
-  più `FatturaElettronicaBody`: `parse()` restituisce sempre una `list[Documento]`.
+- **Namespace-agnostic.** XML coming from the SdI (the Italian exchange system) mixes the schema
+  namespace, children with `xmlns=""` and an embedded XAdES signature; navigation uses the tag's
+  *local name*, so it works with or without prefixes.
+- **No exceptions on optional fields.** Missing tags become empty strings or empty lists:
+  **never `None`**. Printing code does not need to be defensive.
+- **Batch invoices are the norm.** A `FatturaElettronica` can contain several
+  `FatturaElettronicaBody`: `parse()` always returns a `list[Documento]`.
 
-`parse()` solleva `ValueError` solo se la radice non è `<FatturaElettronica>`, se
-l'XML è malformato o se non c'è alcun corpo documento. Per un controllo
-preventivo che non solleva mai c'è `is_fattura(raw)`:
+`parse()` raises `ValueError` only if the root is not `<FatturaElettronica>`, if the XML is
+malformed or if there is no document body. For an upfront check that never raises there is
+`is_fattura(raw)`:
 
 ```python
 from fatturapa import is_fattura
@@ -71,39 +71,38 @@ if is_fattura(contenuto):
     documenti = parse(contenuto)
 ```
 
-## Il modello
+## The model
 
-`parse()` restituisce una lista di `Documento`:
+`parse()` returns a list of `Documento`:
 
-| campo | contenuto |
+| field | content |
 |---|---|
 | `tipo_documento` / `tipo_documento_codice` | *Fattura* / `TD01` |
-| `numero`, `data`, `divisa`, `causali` | dati generali |
-| `importo_totale`, `totale_imponibile`, `totale_imposta`, `bollo` | totali |
-| `cedente`, `cessionario` | `Soggetto` (denominazione, `partita_iva`, sede, `indirizzo_completo`) |
-| `linee` | `list[Linea]` (descrizione, quantità, prezzi, aliquota, `codice_articolo`) |
-| `riepiloghi` | `list[Riepilogo]` (aliquota, natura, imponibile, imposta, riferimento normativo) |
-| `pagamenti`, `condizioni_pagamento` | `list[Pagamento]` (modalità, scadenza, IBAN, istituto) |
-| `trasporto` | `Trasporto` (causale, colli, peso, `indirizzo_resa`) |
+| `numero`, `data`, `divisa`, `causali` | general data (number, date, currency, descriptions) |
+| `importo_totale`, `totale_imponibile`, `totale_imposta`, `bollo` | totals |
+| `cedente`, `cessionario` | `Soggetto` (seller / buyer: name, `partita_iva`, address, `indirizzo_completo`) |
+| `linee` | `list[Linea]` (description, quantity, prices, VAT rate, `codice_articolo`) |
+| `riepiloghi` | `list[Riepilogo]` (VAT rate, nature, taxable amount, tax, legal reference) |
+| `pagamenti`, `condizioni_pagamento` | `list[Pagamento]` (method, due date, IBAN, bank) |
+| `trasporto` | `Trasporto` (reason, packages, weight, `indirizzo_resa`) |
 | `ordini` | `list[DatiOrdine]` (`DatiOrdineAcquisto`) |
 
-Tutti i valori sono stringhe **già formattate** per essere stampate. Se ti
-servono come numeri, riconvertili tu: la libreria non fa scelte al posto tuo su
-arrotondamenti e valuta.
+All values are strings **already formatted** for printing. If you need numbers, convert them
+yourself: the library does not make rounding or currency choices on your behalf.
 
-## Un `.p7m` firmato?
+## A signed `.p7m`?
 
-Le fatture arrivano spesso firmate (`.xml.p7m`). Estrai prima il contenuto, poi
-passalo a `parse()`:
+Invoices often arrive digitally signed (`.xml.p7m`). Extract the content first, then pass it to
+`parse()`:
 
 ```bash
 openssl smime -verify -in fattura.xml.p7m -inform DER -noverify -out fattura.xml
 ```
 
-Per farlo da interfaccia web c'è [p7m-apri](https://github.com/azuki-beans/p7m-apri),
-che usa questa stessa libreria per visualizzare le fatture.
+For a web interface there is [p7m-apri](https://github.com/azuki-beans/p7m-apri), which uses this
+same library to display invoices.
 
-## Sviluppo
+## Development
 
 ```bash
 poetry install
@@ -111,8 +110,8 @@ poetry run pytest
 poetry run ruff check .
 ```
 
-I test girano sui **tracciati di esempio pubblicati dall'Agenzia delle Entrate**
-(in `tests/tracciati/`), più casi mirati costruiti a mano per trasporto, bollo,
-natura e formattazione.
+Tests run on the **sample files published by the Italian Revenue Agency** (*Agenzia delle
+Entrate*, in `tests/tracciati/`), plus hand-made cases for transport, stamp duty, VAT nature and
+formatting.
 
-Licenza MIT.
+MIT License.
